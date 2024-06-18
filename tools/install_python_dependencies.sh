@@ -1,15 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-ROOT=$DIR/../
-cd $ROOT
-
-RC_FILE="${HOME}/.$(basename ${SHELL})rc"
-if [ "$(uname)" == "Darwin" ] && [ $SHELL == "/bin/bash" ]; then
-  RC_FILE="$HOME/.bash_profile"
-fi
-
+function use_poetry() {
 if ! command -v "pyenv" > /dev/null 2>&1; then
   echo "pyenv install ..."
   curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
@@ -19,12 +11,12 @@ fi
 if [ -z "$PYENV_SHELL" ] || [ -n "$PYENV_PATH_SETUP" ]; then
   echo "pyenvrc setup ..."
   cat <<EOF > "${HOME}/.pyenvrc"
-if [ -z "\$PYENV_ROOT" ]; then
-  $PYENV_PATH_SETUP
-  export PYENV_ROOT="\$HOME/.pyenv"
-  eval "\$(pyenv init -)"
-  eval "\$(pyenv virtualenv-init -)"
-fi
+  if [ -z "\$PYENV_ROOT" ]; then
+    $PYENV_PATH_SETUP
+    export PYENV_ROOT="\$HOME/.pyenv"
+    eval "\$(pyenv init -)"
+    eval "\$(pyenv virtualenv-init -)"
+  fi
 EOF
 
   SOURCE_PYENVRC="source ~/.pyenvrc"
@@ -46,7 +38,7 @@ if ! pyenv prefix ${PYENV_PYTHON_VERSION} &> /dev/null; then
   # no pyenv update on mac
   if [ "$(uname)" == "Linux" ]; then
     echo "pyenv update ..."
-    pyenv update
+    pyenv update --quiet
   fi
   echo "python ${PYENV_PYTHON_VERSION} install ..."
   CONFIGURE_OPTS="--enable-shared" pyenv install -f ${PYENV_PYTHON_VERSION}
@@ -74,6 +66,30 @@ poetry install --no-cache --no-root
 pyenv rehash
 
 [ -n "$POETRY_VIRTUALENVS_CREATE" ] && RUN="" || RUN="poetry run"
+}
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+ROOT=$DIR/../
+cd $ROOT
+
+RC_FILE="${HOME}/.$(basename ${SHELL})rc"
+if [ "$(uname)" == "Darwin" ] && [ $SHELL == "/bin/bash" ]; then
+  RC_FILE="$HOME/.bash_profile"
+fi
+
+MIN_VERSION=$(grep -m 1 requires-python pyproject.toml | tr -d '"' | tr -d "'" | cut -d' ' -f4)
+if [[ -z "$USE_POETRY" ]]; then
+  clear
+  echo "Minimum Python version required: $MIN_VERSION"
+  read -p "Do you want to use poetry shell for your venv setup? [y/n]: " -n 1 -r
+  echo ""
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    USE_POETRY="yes"
+  fi
+fi
+if [[ "$USE_POETRY" == "yes" ]]; then
+  use_poetry
+fi
 
 if [ "$(uname)" != "Darwin" ] && [ -e "$ROOT/.git" ]; then
   echo "pre-commit hooks install..."

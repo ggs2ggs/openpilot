@@ -1,66 +1,134 @@
 #!/usr/bin/env bash
 set -e
 
-SUDO=""
-
-# Use sudo if not root
-if [[ ! $(id -u) -eq 0 ]]; then
-  if [[ -z $(which sudo) ]]; then
-    echo "Please install sudo or run as root"
-    exit 1
-  fi
-  SUDO="sudo"
-fi
-
 # Install common packages
 function install_ubuntu_common_requirements() {
-  $SUDO apt-get update
-  $SUDO apt-get install -y --no-install-recommends \
-    ca-certificates \
-    clang \
-    cppcheck \
-    build-essential \
-    gcc-arm-none-eabi \
-    liblzma-dev \
-    capnproto \
-    libcapnp-dev \
-    curl \
-    libcurl4-openssl-dev \
-    git \
-    git-lfs \
-    ffmpeg \
-    libavformat-dev \
-    libavcodec-dev \
-    libavdevice-dev \
-    libavutil-dev \
-    libavfilter-dev \
-    libbz2-dev \
-    libeigen3-dev \
-    libffi-dev \
-    libglew-dev \
-    libgles2-mesa-dev \
-    libglfw3-dev \
-    libglib2.0-0 \
-    libqt5charts5-dev \
-    libncurses5-dev \
-    libssl-dev \
-    libusb-1.0-0-dev \
-    libzmq3-dev \
-    libsqlite3-dev \
-    libsystemd-dev \
-    locales \
-    opencl-headers \
-    ocl-icd-libopencl1 \
-    ocl-icd-opencl-dev \
-    portaudio19-dev \
-    qtmultimedia5-dev \
-    qtlocation5-dev \
-    qtpositioning5-dev \
-    qttools5-dev-tools \
-    libqt5svg5-dev \
-    libqt5serialbus5-dev  \
-    libqt5x11extras5-dev \
-    libqt5opengl5-dev
+
+      # Install runtime packages
+  if [[ -z "$INSTALL_RUNTIME_PACKAGES" ]]; then
+    echo "
+      runtime packages to be installed:
+
+      ca-certificates
+      clang
+      cppcheck
+      build-essential
+      gcc-arm-none-eabi
+      capnproto
+      curl
+      git
+      git-lfs
+      ffmpeg
+      libglib2.0-0
+      locales
+      opencl-headers
+      ocl-icd-libopencl1"
+
+    read -p "Do you want to install these runtime packages? [Y/n]: " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      INSTALL_RUNTIME_PACKAGES="yes"
+    fi
+  fi
+  if [[ "$INSTALL_RUNTIME_PACKAGES" == "yes" ]]; then
+    $SUDO apt-get update
+    $SUDO apt-get install -y --no-install-recommends \
+      ca-certificates \
+      clang \
+      cppcheck \
+      build-essential \
+      gcc-arm-none-eabi \
+      capnproto \
+      curl \
+      git \
+      git-lfs \
+      ffmpeg \
+      libglib2.0-0 \
+      locales \
+      opencl-headers \
+      ocl-icd-libopencl1
+  fi
+
+    # Install dev packages
+  if [[ -z "$INSTALL_DEV_PACKAGES" ]]; then
+    clear
+    echo "
+      apt dev packages to be installed:
+
+      libqt5charts5-dev
+      libncurses5-dev
+      libssl-dev
+      libusb-1.0-0-dev
+      libzmq3-dev
+      libsqlite3-dev
+      libsystemd-dev
+      libavformat-dev
+      libavcodec-dev
+      libavdevice-dev
+      libavutil-dev
+      libavfilter-dev
+      libbz2-dev
+      liblzma-dev
+      libeigen3-dev
+      libffi-dev
+      libglew-dev
+      libgles2-mesa-dev
+      libglfw3-dev
+      ocl-icd-opencl-dev
+      portaudio19-dev
+      qtmultimedia5-dev
+      qtlocation5-dev
+      libcapnp-dev
+      qtpositioning5-dev
+      qttools5-dev-tools
+      libqt5svg5-dev
+      libqt5serialbus5-dev
+      libqt5x11extras5-dev
+      libcurl4-openssl-dev
+      libqt5opengl5-dev"
+
+    read -p "Do you want to install these apt development packages? [Y/n]: " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+      INSTALL_DEV_PACKAGES="yes"
+    fi
+  fi
+  if [[ "$INSTALL_DEV_PACKAGES" == "yes" ]]; then
+    $SUDO apt-get update
+    $SUDO apt-get install -y --no-install-recommends \
+      libqt5charts5-dev \
+      libncurses5-dev \
+      libssl-dev \
+      libusb-1.0-0-dev \
+      libzmq3-dev \
+      libsqlite3-dev \
+      liblzma-dev \
+      libsystemd-dev \
+      libavformat-dev \
+      libavcodec-dev \
+      libavdevice-dev \
+      libavutil-dev \
+      libavfilter-dev \
+      libbz2-dev \
+      libeigen3-dev \
+      libffi-dev \
+      libglew-dev \
+      libgles2-mesa-dev \
+      libglfw3-dev \
+      ocl-icd-opencl-dev \
+      portaudio19-dev \
+      qtmultimedia5-dev \
+      qtlocation5-dev \
+      qtpositioning5-dev \
+      libcapnp-dev \
+      qttools5-dev-tools \
+      libqt5svg5-dev \
+      libqt5serialbus5-dev  \
+      libqt5x11extras5-dev \
+      libcurl4-openssl-dev \
+      libqt5opengl5-dev
+  fi
+
 }
 
 # Install extra packages
@@ -105,7 +173,6 @@ function install_ubuntu_focal_requirements() {
     qt5-default \
     python-dev
 }
-
 # Detect OS using /etc/os-release file
 if [ -f "/etc/os-release" ]; then
   source /etc/os-release
@@ -117,6 +184,7 @@ if [ -f "/etc/os-release" ]; then
       install_ubuntu_focal_requirements
       ;;
     *)
+      clear
       echo "$ID $VERSION_ID is unsupported. This setup script is written for Ubuntu 20.04."
       read -p "Would you like to attempt installation anyway? " -n 1 -r
       echo ""
@@ -132,6 +200,7 @@ if [ -f "/etc/os-release" ]; then
 
   # Install extra packages
   if [[ -z "$INSTALL_EXTRA_PACKAGES" ]]; then
+    clear
     read -p "Base setup done. Do you want to install extra development packages? [Y/n]: " -n 1 -r
     echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
