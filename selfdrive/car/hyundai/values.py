@@ -518,6 +518,11 @@ class CAR(Platforms):
     GENESIS_G70.specs,
     flags=HyundaiFlags.MANDO_RADAR,
   )
+  GENESIS_G70_1ST_GEN_FL = HyundaiPlatformConfig(
+    [HyundaiCarDocs("Genesis G70 (3.3T Trim) 2024", "All", car_parts=CarParts.common([CarHarness.hyundai_l]))],
+    CarSpecs(mass=1769, wheelbase=2.83, steerRatio=12.9),  # steerRatio guesstimate from G70 1st Gen platform
+    flags=HyundaiFlags.CHECKSUM_CRC8 | HyundaiFlags.CAMERA_SCC,
+  )
   GENESIS_GV70_1ST_GEN = HyundaiCanFDPlatformConfig(
     [
       HyundaiCarDocs("Genesis GV70 (2.5T Trim) 2022-23", "All", car_parts=CarParts.common([CarHarness.hyundai_l])),
