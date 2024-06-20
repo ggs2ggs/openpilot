@@ -41,6 +41,10 @@ To actually display the stream, run `watch3` in separate terminal:
 
 ```cd ~/openpilot/selfdrive/ui/ && ./watch3```
 
+To display one camera (or specific cameras), run `watch3` with the `--cams` flag:
+
+```cd ~/openpilot/selfdrive/ui/ && ./watch3 --cams 0```
+
 ## compressed_vipc.py usage
 ```
 $ python compressed_vipc.py -h
